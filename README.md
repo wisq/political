@@ -1,21 +1,11 @@
 # Political
 
-**TODO: Add description**
+Just a quick project I threw together to analyse some Discord logs.
 
-## Installation
+* Splits the data into buckets by date
+* Categorises messages and embedded links into "topics" based on content
+  * Messages may belong to more than one topic
+  * Messages with no known topics are given the "other" topic
+* Generates CSV with the total counts
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `political` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:political, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/political](https://hexdocs.pm/political).
-
+Logs were extracted using [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter).
