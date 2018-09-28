@@ -1,5 +1,5 @@
 defmodule Political.Stats do
-  @keyword_lists [
+  @keywords [
     trump: [
       "trump",
       "republican",
@@ -35,7 +35,8 @@ defmodule Political.Stats do
     @enforce_keys [:key]
     defstruct(
       key: nil,
-      counts: %{}
+      total: %Counts{},
+      topics: %{}
     )
 
     def key(dt) do
@@ -46,27 +47,28 @@ defmodule Political.Stats do
     end
 
     def get(bucket, key) do
-      Map.get(bucket.counts, key)
+      Map.get(bucket.topics, key)
     end
 
     def add(bucket, msg, cats) do
       c = Counts.count(msg)
-      counts = Enum.reduce(cats, bucket.counts, &apply_category(&1, &2, c))
-      %Bucket{bucket | counts: counts}
+      topics = Enum.reduce(cats, bucket.topics, &apply_category(&1, &2, c))
+
+      %Bucket{bucket | topics: topics, total: Counts.add(bucket.total, c)}
     end
 
-    defp apply_category(categ, bucket, counts) do
-      Map.update(bucket, categ, counts, &Counts.add(&1, counts))
+    defp apply_category(categ, bucket, c) do
+      Map.update(bucket, categ, c, &Counts.add(&1, c))
     end
   end
 
-  @keywords Keyword.keys(@keyword_lists)
+  @topics Keyword.keys(@keywords)
 
-  @regexes Enum.map(@keyword_lists, fn {key, words} ->
+  @regexes Enum.map(@keywords, fn {key, words} ->
              {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}}
            end)
 
-  def keywords, do: @keywords
+  def topics, do: @topics
 
   def stream(messages_stream) do
     messages_stream

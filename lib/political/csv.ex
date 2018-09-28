@@ -21,11 +21,15 @@ defmodule Political.CSV do
   end
 
   defp header_columns() do
-    Stats.keywords()
-    |> Enum.flat_map(fn keyword ->
+    topics =
+      Stats.topics()
+      |> Enum.map(&"'#{&1}'")
+
+    ["Total" | topics]
+    |> Enum.flat_map(fn type ->
       [
-        "\"#{keyword}\" messages",
-        "\"#{keyword}\" links"
+        "#{type} messages",
+        "#{type} links"
       ]
     end)
   end
@@ -35,12 +39,19 @@ defmodule Political.CSV do
   end
 
   defp bucket_columns(bucket) do
-    Stats.keywords()
-    |> Enum.flat_map(fn keyword ->
-      bucket
-      |> Bucket.get(keyword)
-      |> counts_columns()
-    end)
+    [:total | Stats.topics()]
+    |> Enum.flat_map(&bucket_columns(bucket, &1))
+  end
+
+  defp bucket_columns(bucket, :total) do
+    bucket.total
+    |> counts_columns()
+  end
+
+  defp bucket_columns(bucket, topic) do
+    bucket
+    |> Bucket.get(topic)
+    |> counts_columns()
   end
 
   defp counts_columns(nil), do: ["", ""]
