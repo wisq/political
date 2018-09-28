@@ -1,6 +1,4 @@
 defmodule Political.Stats do
-  alias Political.Stats
-
   @keywords [
     trump: [
       "trump",
@@ -34,16 +32,23 @@ defmodule Political.Stats do
   end
 
   defmodule Bucket do
+    @enforce_keys [:key]
+    defstruct(
+      key: nil,
+      counts: %{}
+    )
+
     def key(dt) do
       dt
+      |> Timex.Timezone.convert("Etc/UTC")
       |> Timex.beginning_of_week()
       |> Timex.format!("{YYYY}-{0M}-{0D}")
     end
 
-    def update(old, msg, cats) do
-      counts = Counts.count(msg)
-      new = Enum.reduce(cats, old || %{}, &apply_category(&1, &2, counts))
-      {old, new}
+    def add(bucket, msg, cats) do
+      c = Counts.count(msg)
+      counts = Enum.reduce(cats, bucket.counts, &apply_category(&1, &2, c))
+      %Bucket{bucket | counts: counts}
     end
 
     defp apply_category(categ, bucket, counts) do
@@ -51,27 +56,16 @@ defmodule Political.Stats do
     end
   end
 
-  @enforce_keys [:keywords]
-  defstruct(
-    keywords: [],
-    buckets: %{}
-  )
-
   @regexes Enum.map(@keywords, fn {key, words} ->
              {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}}
            end)
-
-  def new do
-    %Stats{keywords: Keyword.keys(@keywords)}
-  end
 
   def collect(stream) do
     stream
     |> Stream.map(fn msg ->
       {msg, message_categories(msg)}
     end)
-    |> Enum.take(5000)
-    |> Enum.reduce(new(), &add_to_bucket/2)
+    |> Stream.transform(nil, &transform_bucket/2)
   end
 
   defp message_categories(msg) do
@@ -93,14 +87,21 @@ defmodule Political.Stats do
     |> Enum.map(fn {key, _rx} -> key end)
   end
 
-  defp add_to_bucket({m, cats}, %Stats{} = stats) do
-    {_, buckets} =
-      Map.get_and_update(
-        stats.buckets,
-        Bucket.key(m.timestamp),
-        &Bucket.update(&1, m, cats)
-      )
+  defp transform_bucket({msg, cats}, bucket) do
+    key = Bucket.key(msg.timestamp)
 
-    %Stats{stats | buckets: buckets}
+    case bucket do
+      nil ->
+        bucket = %Bucket{key: key} |> Bucket.add(msg, cats)
+        {[], bucket}
+
+      %Bucket{key: ^key} ->
+        bucket = Bucket.add(bucket, msg, cats)
+        {[], bucket}
+
+      %Bucket{} = old ->
+        new = %Bucket{key: key} |> Bucket.add(msg, cats)
+        {[old], new}
+    end
   end
 end
