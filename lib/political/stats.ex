@@ -1,17 +1,71 @@
 defmodule Political.Stats do
+  # All keywords are case-insensitive.
+  # Strings will be searched as-is (special characters escaped).
+  # Regexes will be matched directly.
   @keywords [
     trump: [
       "trump",
+      # Party names (singular or plural):
       "republican",
+      "republicans",
+      "democrat",
+      "democrats",
+      "gop",
+      # Spokespersons:
       "kellyanne",
+      "huckabee",
+      "sanders",
+      "spicer",
+      "scaramucci",
+      "the mooch",
+      # Lawyers / criminals:
       "manafort",
-      "mueller",
-      "giuliani",
       "cohen",
-      "kavanaugh"
+      "giuliani",
+      "avenatti",
+      # Targets:
+      "mueller",
+      "comey",
+      # (as in Stormy)
+      "daniels",
+      # Appointees:
+      "kavanaugh",
+      "sessions",
+      # Other republicans:
+      "mccain",
+      "paul ryan"
     ],
-    brexit: ["brexit", "theresa", "ukip", "article 50", "customs union"]
+    brexit: [
+      "brexit",
+      # Party names (singular or plural):
+      "tory",
+      "tories",
+      "ukip",
+      "dup",
+      # People:
+      "theresa",
+      "corbyn",
+      "boris",
+      "barnier",
+      # Concepts:
+      "article 50",
+      "customs union",
+      "hard exit",
+      "soft exit"
+    ]
   ]
+
+  @topics Keyword.keys(@keywords) ++ [:other]
+
+  @regexes Enum.map(@keywords, fn {key, terms} ->
+             terms =
+               Enum.map(terms, fn
+                 str when is_binary(str) -> Regex.escape(str)
+                 %Regex{} = rx -> Regex.source(rx)
+               end)
+
+             {key, ~r{(^|\W)#{Enum.join(terms, "|")}(\W|$)}i}
+           end)
 
   defmodule Counts do
     defstruct(
@@ -61,12 +115,6 @@ defmodule Political.Stats do
       Map.update(bucket, categ, c, &Counts.add(&1, c))
     end
   end
-
-  @topics Keyword.keys(@keywords) ++ [:other]
-
-  @regexes Enum.map(@keywords, fn {key, words} ->
-             {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}i}
-           end)
 
   def topics, do: @topics
 
