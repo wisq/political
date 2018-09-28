@@ -64,8 +64,10 @@ defmodule Political.Stats do
                  %Regex{} = rx -> Regex.source(rx)
                end)
 
-             {key, ~r{(^|\W)#{Enum.join(terms, "|")}(\W|$)}i}
+             {key, ~r{\b(#{Enum.join(terms, "|")})\b}i}
            end)
+
+  def regexes, do: @regexes
 
   defmodule Counts do
     defstruct(
@@ -127,7 +129,7 @@ defmodule Political.Stats do
     |> Stream.transform(nil, &transform_bucket/2)
   end
 
-  defp message_categories(msg) do
+  def message_categories(msg) do
     [
       msg.text,
       Enum.map(msg.embeds, & &1.title),
