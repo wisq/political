@@ -75,6 +75,7 @@ defmodule Political.Stats do
     |> Stream.map(fn msg ->
       {msg, message_categories(msg)}
     end)
+    |> Stream.concat([:done])
     |> Stream.transform(nil, &transform_bucket/2)
   end
 
@@ -100,6 +101,8 @@ defmodule Political.Stats do
 
   defp default_to_other([]), do: [:other]
   defp default_to_other(cats), do: cats
+
+  defp transform_bucket(:done, bucket), do: {[bucket], nil}
 
   defp transform_bucket({msg, cats}, bucket) do
     key = Bucket.key(msg.timestamp)
