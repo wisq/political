@@ -65,7 +65,7 @@ defmodule Political.Stats do
   @topics Keyword.keys(@keywords) ++ [:other]
 
   @regexes Enum.map(@keywords, fn {key, words} ->
-             {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}}
+             {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}i}
            end)
 
   def topics, do: @topics
