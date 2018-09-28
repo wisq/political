@@ -7,6 +7,7 @@ defmodule Mix.Tasks.Political do
     Mix.Task.run("app.start")
 
     Political.Parser.parse_file(file)
+    |> Political.Stats.collect()
     |> IO.inspect()
   end
 
