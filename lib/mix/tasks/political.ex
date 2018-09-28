@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Political do
 
     Political.Parser.parse_file(file)
     |> Political.Stats.collect()
+    |> Political.CSV.output()
     |> IO.inspect()
   end
 

@@ -1,5 +1,5 @@
 defmodule Political.Stats do
-  @keywords [
+  @keyword_lists [
     trump: [
       "trump",
       "republican",
@@ -45,6 +45,10 @@ defmodule Political.Stats do
       |> Timex.format!("{YYYY}-{0M}-{0D}")
     end
 
+    def get(bucket, key) do
+      Map.get(bucket.counts, key)
+    end
+
     def add(bucket, msg, cats) do
       c = Counts.count(msg)
       counts = Enum.reduce(cats, bucket.counts, &apply_category(&1, &2, c))
@@ -56,9 +60,13 @@ defmodule Political.Stats do
     end
   end
 
-  @regexes Enum.map(@keywords, fn {key, words} ->
+  @keywords Keyword.keys(@keyword_lists)
+
+  @regexes Enum.map(@keyword_lists, fn {key, words} ->
              {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}}
            end)
+
+  def keywords, do: @keywords
 
   def collect(stream) do
     stream
