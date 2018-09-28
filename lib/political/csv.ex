@@ -23,7 +23,7 @@ defmodule Political.CSV do
   defp header_columns() do
     topics =
       Stats.topics()
-      |> Enum.map(&"'#{&1}'")
+      |> Enum.map(&"\"#{&1}\"")
 
     ["Total" | topics]
     |> Enum.flat_map(fn type ->

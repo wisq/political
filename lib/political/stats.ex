@@ -62,7 +62,7 @@ defmodule Political.Stats do
     end
   end
 
-  @topics Keyword.keys(@keywords)
+  @topics Keyword.keys(@keywords) ++ [:other]
 
   @regexes Enum.map(@keywords, fn {key, words} ->
              {key, ~r{(^|\W)#{Enum.join(words, "|")}(\W|$)}}
@@ -87,6 +87,7 @@ defmodule Political.Stats do
     |> List.flatten()
     |> Enum.flat_map(&text_categories/1)
     |> Enum.uniq()
+    |> default_to_other()
   end
 
   defp text_categories(nil), do: []
@@ -96,6 +97,9 @@ defmodule Political.Stats do
     |> Enum.filter(fn {_key, rx} -> str =~ rx end)
     |> Enum.map(fn {key, _rx} -> key end)
   end
+
+  defp default_to_other([]), do: [:other]
+  defp default_to_other(cats), do: cats
 
   defp transform_bucket({msg, cats}, bucket) do
     key = Bucket.key(msg.timestamp)
