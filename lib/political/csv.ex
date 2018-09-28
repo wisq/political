@@ -1,11 +1,11 @@
 defmodule Political.CSV do
   alias Political.Stats
-  alias Political.Stats.{Bucket, Counts}
+  alias Political.Stats.Bucket
 
-  def output(stats_stream) do
+  def stream(stats_stream) do
     stats_stream
     |> Stream.transform(:header, &data_row/2)
-    |> Enum.take(5)
+    |> NimbleCSV.RFC4180.dump_to_stream()
   end
 
   defp data_row(row, :header) do

@@ -7,9 +7,10 @@ defmodule Mix.Tasks.Political do
     Mix.Task.run("app.start")
 
     Political.Parser.parse_file(file)
-    |> Political.Stats.collect()
-    |> Political.CSV.output()
-    |> IO.inspect()
+    |> Political.Stats.stream()
+    |> Political.CSV.stream()
+    |> Stream.into(IO.stream(:stdio, :line))
+    |> Stream.run()
   end
 
   def run(_) do

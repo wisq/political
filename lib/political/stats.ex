@@ -68,8 +68,8 @@ defmodule Political.Stats do
 
   def keywords, do: @keywords
 
-  def collect(stream) do
-    stream
+  def stream(messages_stream) do
+    messages_stream
     |> Stream.map(fn msg ->
       {msg, message_categories(msg)}
     end)
