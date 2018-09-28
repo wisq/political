@@ -107,7 +107,11 @@ defmodule Political.Stats do
         bucket = Bucket.add(bucket, msg, cats)
         {[], bucket}
 
-      %Bucket{} = old ->
+      %Bucket{key: old_key} = old ->
+        unless old_key < key do
+          raise "Message goes backwards in time: #{inspect(msg)}"
+        end
+
         new = %Bucket{key: key} |> Bucket.add(msg, cats)
         {[old], new}
     end

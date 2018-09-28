@@ -7,9 +7,11 @@ defmodule Political.Parser.Timestamp do
           month: month_to_number(month),
           day: String.to_integer(day),
           hour:
-            case am_pm do
-              "AM" -> String.to_integer(hour)
-              "PM" -> String.to_integer(hour) + 12
+            case {String.to_integer(hour), am_pm} do
+              {12, "AM"} -> 0
+              {hh, "AM"} -> hh
+              {12, "PM"} -> 12
+              {hh, "PM"} -> 12 + hh
             end,
           minute: String.to_integer(minute),
           second: 0
