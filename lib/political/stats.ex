@@ -95,11 +95,17 @@ defmodule Political.Stats do
       topics: %{}
     )
 
-    def key(dt) do
+    def key(dt, :weekly) do
       dt
       |> Timex.Timezone.convert("Etc/UTC")
       |> Timex.beginning_of_week()
       |> Timex.format!("{YYYY}-{0M}-{0D}")
+    end
+
+    def key(dt, :monthly) do
+      dt
+      |> Timex.Timezone.convert("Etc/UTC")
+      |> Timex.format!("{YYYY}-{0M}")
     end
 
     def get(bucket, key) do
@@ -120,13 +126,13 @@ defmodule Political.Stats do
 
   def topics, do: @topics
 
-  def stream(messages_stream) do
+  def stream(messages_stream, interval) do
     messages_stream
     |> Stream.map(fn msg ->
       {msg, message_categories(msg)}
     end)
     |> Stream.concat([:done])
-    |> Stream.transform(nil, &transform_bucket/2)
+    |> Stream.transform(nil, &transform_bucket(&1, &2, interval))
   end
 
   def message_categories(msg) do
@@ -152,10 +158,10 @@ defmodule Political.Stats do
   defp default_to_other([]), do: [:other]
   defp default_to_other(cats), do: cats
 
-  defp transform_bucket(:done, bucket), do: {[bucket], nil}
+  defp transform_bucket(:done, bucket, _mode), do: {[bucket], nil}
 
-  defp transform_bucket({msg, cats}, bucket) do
-    key = Bucket.key(msg.timestamp)
+  defp transform_bucket({msg, cats}, bucket, interval) do
+    key = Bucket.key(msg.timestamp, interval)
 
     case bucket do
       nil ->
